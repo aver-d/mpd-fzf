@@ -45,9 +45,7 @@ func (s *Stack) Push(dirname string) {
 }
 
 func (s *Stack) Pop() {
-	if len(s.s) == 0 {
-		return
-	}
+	failOn(len(s.s) <= 0, "Invalid directory state. Corrupted database?")
 	i := len(s.s) - 1
 	s.s = s.s[:i]
 	s.dir = filepath.Join(s.s...)
