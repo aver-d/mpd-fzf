@@ -88,8 +88,6 @@ func (t *Track) Set(key, value string) {
 		t.Time = formatDurationString(value)
 	case "Title":
 		t.Title = value
-	default:
-		panic("Unknown key: " + key)
 	}
 }
 
