@@ -112,10 +112,6 @@ func spaceBetween(left, right string, maxchars int) string {
 	return left + strings.Repeat(" ", n) + right
 }
 
-func spaces(n int) string {
-	return strings.Repeat(" ", n)
-}
-
 func withoutExt(path string) string {
 	basename := filepath.Base(path)
 	return strings.TrimSuffix(basename, filepath.Ext(basename))
