@@ -17,6 +17,8 @@ import (
 
 const delimiter string = "::::"
 
+var runecount = utf8.RuneCountInString
+
 func fail(err error) {
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -102,9 +104,7 @@ func formatDurationString(str string) string {
 }
 
 func spaceBetween(left, right string, maxchars int) string {
-	n_left := utf8.RuneCountInString(left)
-	n_right := utf8.RuneCountInString(right)
-	n := maxchars - n_left - n_right
+	n := maxchars - runecount(left) - runecount(right)
 	return left + strings.Repeat(" ", n) + right
 }
 
@@ -114,8 +114,7 @@ func withoutExt(path string) string {
 }
 
 func truncate(s string, max int, suffix string) string {
-	suffixLen := utf8.RuneCountInString(suffix)
-	max -= suffixLen
+	max -= runecount(suffix)
 	if max < 0 {
 		panic("suffix length greater than max chars")
 	}
