@@ -21,7 +21,7 @@ The compiled `mpd-fzf` binary operates with a shell script `mpd-fzf-play` (provi
     # Assuming ~/bin in $PATH
     $ mv mpd-fzf mpd-fzf-play ~/bin
 
-`mpd-fzf-play` calls [mpc][mpc] to play the track, so mpc is a dependency. I could change this to make a direct TCP connection to mpd through Go, but there doesn't seem much need given the ubiquity of mpc. The extra script also provides an opportunity to run some additional tasks related to specific mpd client.
+`mpd-fzf-play` calls [mpc][mpc] to play the track, so mpc is a dependency. I could change this to make a direct TCP connection to mpd through Go, but there doesn't seem much need given the ubiquity of mpc. The extra script also provides an opportunity to run some additional tasks related to a specific mpd client.
 
 To install mpc do something like…
 
