@@ -94,7 +94,10 @@ func (t *Track) Set(key, value string) {
 }
 
 func formatDurationString(str string) string {
-	duration, _ := time.ParseDuration(str + "s")
+	duration, err := time.ParseDuration(str + "s")
+	if err != nil {
+		return ""
+	}
 	zero := time.Time{}
 	format := zero.Add(duration).Format("04:05")
 	if duration > time.Hour {
