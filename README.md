@@ -15,6 +15,8 @@ The compiled `mpd-fzf` binary operates with a shell script `mpd-fzf-play` (provi
 
 ## Installation
 
+Compile with Go.
+
     $ git clone https://github.com/aver-d/mpd-fzf
     $ cd mpd-fzf
     $ go build -o mpd-fzf mpd-fzf.go
