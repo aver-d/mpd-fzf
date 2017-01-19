@@ -181,13 +181,6 @@ func groupByArtist(tracks []*Track) []*Track {
 	return shuffled
 }
 
-func fzfcmd() *exec.Cmd {
-	bind := "--bind=ctrl-k:kill-line,enter:execute(mpd-fzf-play {})"
-	fzf := exec.Command("fzf", "--no-hscroll", "--exact", bind)
-	fzf.Stderr = os.Stderr
-	return fzf
-}
-
 func parse(scan *bufio.Scanner) []*Track {
 
 	tracks, track := []*Track{}, new(Track)
@@ -257,6 +250,13 @@ func findDbFile() string {
 	return dbFile
 }
 
+func fzfcmd() *exec.Cmd {
+	bind := "--bind=ctrl-k:kill-line,enter:execute(mpd-fzf-play {})"
+	fzf := exec.Command("fzf", "--no-hscroll", "--exact", bind)
+	fzf.Stderr = os.Stderr
+	return fzf
+}
+
 func main() {
 	dbFile := findDbFile()
 	format := trackFormatter()
@@ -269,8 +269,8 @@ func main() {
 	scan := bufio.NewScanner(gz)
 	tracks := groupByArtist(parse(scan))
 
-	fail(f.Close())
 	fail(gz.Close())
+	fail(f.Close())
 
 	fzf := fzfcmd()
 	in, _ := fzf.StdinPipe()
