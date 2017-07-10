@@ -251,7 +251,7 @@ func findDbFile() string {
 }
 
 func fzfcmd() *exec.Cmd {
-	bind := "--bind=ctrl-k:kill-line,enter:execute(mpd-fzf-play {})"
+	bind := "--bind=enter:execute-silent(mpd-fzf-play {})"
 	fzf := exec.Command("fzf", "--no-hscroll", "--exact", bind)
 	fzf.Stderr = os.Stderr
 	return fzf
