@@ -10,18 +10,20 @@ Running `mpd-fzf` will send the entire mpd database to fzf, and Enter key will p
 
 The compiled `mpd-fzf` binary operates with a shell script `mpd-fzf-play` (provided for bash and fish shells). Both `mpd-fzf` and `mpd-fzf-play` should be available through `$PATH`.
 
-`mpd-fzf-play` is a copy of `mpd-fzf-play.bash`, but `mpd-fzf-play.fish` can be renamed to `mpd-fzf-play` and used instead (not that the choice really makes much difference).
-
 
 ## Installation
 
 Compile with Go.
 
+Assuming ~/bin in $PATH:
+
     $ git clone https://github.com/aver-d/mpd-fzf
     $ cd mpd-fzf
-    $ go build -o mpd-fzf mpd-fzf.go
-    # Assuming ~/bin in $PATH
-    $ mv mpd-fzf mpd-fzf-play ~/bin
+    $ go build -o ~/bin/mpd-fzf mpd-fzf.go
+    $ cp mpd-fzf-play.bash ~/bin/mpd-fzf-play
+    $ chmod +x ~/bin/mpd-fzf-play
+
+
 
 `mpd-fzf-play` calls [mpc][mpc] to play the track, so mpc is a dependency. I could change this to make a direct TCP connection to mpd through Go, but there doesn't seem much need given the ubiquity of mpc. The extra script also provides an opportunity to run some additional tasks related to a specific mpd client.
 
