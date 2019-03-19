@@ -31,30 +31,17 @@ func failOn(b bool, message string) {
 	}
 }
 
-type Stack struct {
-	s   []string
-	dir string
-}
-
-func NewStack(capacity int) *Stack {
-	s := make([]string, 0, capacity)
-	return &Stack{s, ""}
-}
+type Stack []string
 
 func (s *Stack) Push(dirname string) {
-	s.s = append(s.s, dirname)
-	s.dir = filepath.Join(s.s...)
+	*s = append(*s, dirname)
 }
 
-func (s *Stack) Pop() {
-	failOn(len(s.s) <= 0, "Invalid directory state. Corrupted database?")
-	i := len(s.s) - 1
-	s.s = s.s[:i]
-	s.dir = filepath.Join(s.s...)
-}
-
-func (s Stack) Dir() string {
-	return s.dir
+func (s *Stack) DiscardTop() {
+	stack := *s
+	failOn(len(stack) <= 0, "Invalid directory state. Corrupted database?")
+	i := len(stack) - 1
+	*s = stack[:i]
 }
 
 func keyval(line string) (string, string) {
@@ -184,7 +171,7 @@ func groupByArtist(tracks []*Track) []*Track {
 func parse(scan *bufio.Scanner) []*Track {
 
 	tracks, track := []*Track{}, new(Track)
-	dirstack := NewStack(256)
+	dirstack := make(Stack, 0, 64)
 
 	for scan.Scan() {
 		key, value := keyval(scan.Text())
@@ -192,12 +179,12 @@ func parse(scan *bufio.Scanner) []*Track {
 		case "directory":
 			dirstack.Push(value)
 		case "end":
-			dirstack.Pop()
+			dirstack.DiscardTop()
 		case "Artist", "Album", "Date", "Genre", "Time", "Title":
 			track.Set(key, value)
 		case "song_begin":
 			track.Filename = value
-			track.Path = filepath.Join(dirstack.Dir(), track.Filename)
+			track.Path = filepath.Join(append(dirstack, track.Filename)...)
 		case "song_end":
 			tracks = append(tracks, track)
 			track = new(Track)
