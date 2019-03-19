@@ -260,11 +260,12 @@ func main() {
 	fail(f.Close())
 
 	fzf := fzfcmd()
-	in, _ := fzf.StdinPipe()
+	in, err := fzf.StdinPipe()
+	fail(err)
 	fail(fzf.Start())
 	for _, t := range tracks {
 		fmt.Fprintln(in, format(t))
 	}
 	fail(in.Close())
-	fzf.Wait()
+	fail(fzf.Wait())
 }
