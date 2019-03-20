@@ -244,6 +244,13 @@ func fzfcmd() *exec.Cmd {
 	return fzf
 }
 
+func ignoreExitInterrupt(err error) error {
+	if strings.HasSuffix(err.Error(), "130") {
+		return nil
+	}
+	return err
+}
+
 func main() {
 	dbFile := findDbFile()
 	format := trackFormatter()
@@ -267,5 +274,5 @@ func main() {
 		fmt.Fprintln(in, format(t))
 	}
 	fail(in.Close())
-	fail(fzf.Wait())
+	fail(ignoreExitInterrupt(fzf.Wait()))
 }
