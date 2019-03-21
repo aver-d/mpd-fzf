@@ -17,7 +17,8 @@ import (
 	runewidth "github.com/mattn/go-runewidth"
 )
 
-const delimiter string = "::::"
+// information | duration | path
+const delimiter string = "\u2002" // EN SPACE
 
 func fail(err error) {
 	if err != nil {
@@ -107,10 +108,9 @@ func withoutExt(path string) string {
 	return strings.TrimSuffix(basename, filepath.Ext(basename))
 }
 
-func alignLeftRight(maxlen int, description, duration string) string {
-	stop := maxlen - len(duration)
-	s := runewidth.Truncate(description, stop, "... ")
-	return runewidth.FillRight(s, stop) + duration
+func alignLeftRight(maxlen int, left, right string) string {
+	s := runewidth.Truncate(left, maxlen, "... ")
+	return runewidth.FillRight(s, maxlen) + right
 }
 
 func termWidth() int {
@@ -126,7 +126,8 @@ func termWidth() int {
 
 func trackFormatter() func(*Track) string {
 	// Remove 5 from screen width for correct fzf display at right edge.
-	width := termWidth() - 5
+	// Then a further one for the delimiter between info and duration.
+	width := termWidth() - 5 - 1
 	return func(t *Track) string {
 		info := t.Title
 		if info == "" {
@@ -138,10 +139,10 @@ func trackFormatter() func(*Track) string {
 		if t.Album != "" {
 			info += " {" + t.Album + "}"
 		}
-		info = strings.Replace(info, delimiter, "", -1)
+		info = strings.Replace(info, delimiter, " ", -1)
 		duration := formatDurationString(t.Time)
 		// Right align duration
-		info = alignLeftRight(width, info, duration)
+		info = alignLeftRight(width-len(duration), info, delimiter+duration)
 		return info + delimiter + t.Path
 	}
 }
@@ -269,17 +270,21 @@ func mpcFindOnPlaylist(path string) (int, bool) {
 }
 
 func cmdPlay(fzfline string) {
-	fields := strings.SplitN(fzfline, delimiter, 2)
-	if len(fields) != 2 {
-		failNotify("mpd-fzf: assert split failure")
+	fields := strings.SplitN(fzfline, delimiter, 3)
+	if len(fields) != 3 {
+		failNotify("mpd-fzf: split assertion failure")
 	}
-	path := fields[1]
+	path := fields[2]
 	mpcPlay(path)
 }
 
 func fzfcmd() *exec.Cmd {
 	bind := "--bind=enter:execute-silent(mpd-fzf _play {})"
-	fzf := exec.Command("fzf", "--no-hscroll", bind)
+	fzf := exec.Command("fzf",
+		"--no-hscroll",
+		"--nth", "1",
+		"--delimiter", delimiter,
+		bind)
 	fzf.Stderr = os.Stderr
 	return fzf
 }
