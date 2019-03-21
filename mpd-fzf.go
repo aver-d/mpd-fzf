@@ -45,12 +45,21 @@ func (s *Stack) DiscardTop() {
 	*s = stack[:i]
 }
 
-func keyval(line string) (string, string) {
+func keyValue(line string) (string, string) {
 	i := strings.Index(line, ":")
-	if i == -1 || i == len(line)-1 {
+	if i < 0 {
 		return line, ""
 	}
-	return line[:i], line[i+2:]
+	if i == len(line)-1 {
+		return line[:i], ""
+	}
+	// The value is always preceded by a space, so +2
+	n := 2
+	// But check anyway...
+	if line[i+1] != ' ' {
+		n = 1
+	}
+	return line[:i], line[i+n:]
 }
 
 type Track struct {
@@ -160,7 +169,7 @@ func parse(scan *bufio.Scanner) []*Track {
 	dirstack := make(Stack, 0, 64)
 
 	for scan.Scan() {
-		key, value := keyval(scan.Text())
+		key, value := keyValue(scan.Text())
 		switch key {
 		case "directory":
 			dirstack.Push(value)
@@ -181,7 +190,7 @@ func parse(scan *bufio.Scanner) []*Track {
 }
 
 func expandUser(path, home string) string {
-	if path[:2] == "~/" {
+	if strings.HasPrefix(path, "~/") {
 		path = strings.Replace(path, "~", home, 1)
 	}
 	return path
