@@ -12,12 +12,11 @@ import (
 	"regexp"
 	"strings"
 	"time"
-	"unicode/utf8"
+
+	runewidth "github.com/mattn/go-runewidth"
 )
 
 const delimiter string = "::::"
-
-var runecount = utf8.RuneCountInString
 
 func fail(err error) {
 	if err != nil {
@@ -25,6 +24,7 @@ func fail(err error) {
 		os.Exit(1)
 	}
 }
+
 func failOn(b bool, message string) {
 	if b {
 		fail(errors.New(message))
@@ -93,40 +93,18 @@ func formatDurationString(str string) string {
 	return "(" + format + ")"
 }
 
-func spaceBetween(left, right string, maxchars int) string {
-	n := maxchars - runecount(left) - runecount(right)
-	return left + strings.Repeat(" ", n) + right
-}
-
 func withoutExt(path string) string {
 	basename := filepath.Base(path)
 	return strings.TrimSuffix(basename, filepath.Ext(basename))
 }
 
-func truncate(s string, max int, suffix string) string {
-	max -= runecount(suffix)
-	if max < 0 {
-		panic("suffix length greater than max chars")
-	}
-	trunc := false
-	count := 0
-	out := make([]rune, 0, max)
-	for _, r := range s {
-		if count >= max {
-			trunc = true
-			break
-		}
-		out = append(out, r)
-		count += 1
-	}
-	result := string(out)
-	if trunc {
-		result += suffix
-	}
-	return result
+func alignLeftRight(maxlen int, description, duration string) string {
+	stop := maxlen - len(duration)
+	s := runewidth.Truncate(description, stop, "... ")
+	return runewidth.FillRight(s, stop) + duration
 }
 
-func trackFormatter() func(*Track) string {
+func termWidth() int {
 	cmd := exec.Command("stty", "size")
 	cmd.Stdin = os.Stdin
 	out, err := cmd.Output()
@@ -134,20 +112,27 @@ func trackFormatter() func(*Track) string {
 	var height, width int
 	_, err = fmt.Sscanf(string(out), "%d %d\n", &height, &width)
 	fail(err)
-	contentLen := width - 5 // remove 5 for fzf display
+	return width
+}
+
+func trackFormatter() func(*Track) string {
+	// Remove 5 from screen width for correct fzf display at right edge.
+	width := termWidth() - 5
 	return func(t *Track) string {
-		str := t.Artist + " - " + t.Title
-		str = strings.TrimPrefix(str, " - ")
-		if str == "" {
-			str = withoutExt(t.Filename)
+		info := t.Title
+		if info == "" {
+			info = withoutExt(t.Filename)
+		}
+		if t.Artist != "" {
+			info = t.Artist + " - " + info
 		}
 		if t.Album != "" {
-			str += " {" + t.Album + "}"
+			info += " {" + t.Album + "}"
 		}
-		str = truncate(str, contentLen-len(t.Time), "..")
-		str = spaceBetween(str, t.Time, contentLen)
-		str = strings.Replace(str, delimiter, "", -1)
-		return str + delimiter + t.Path
+		info = strings.Replace(info, delimiter, "", -1)
+		// Right align duration
+		info = alignLeftRight(width, info, t.Time)
+		return info + delimiter + t.Path
 	}
 }
 
