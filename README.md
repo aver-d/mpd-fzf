@@ -8,24 +8,18 @@ Tracks are formatted as "Artist - Track {Album} (MM:SS)", defaulting to the file
 
 Running `mpd-fzf` will send the entire mpd database to fzf, and Enter key will play a track.
 
-The compiled `mpd-fzf` binary operates with a shell script `mpd-fzf-play` (provided for bash and fish shells). Both `mpd-fzf` and `mpd-fzf-play` should be available through `$PATH`.
-
 
 ## Installation
 
-Compile with Go.
+    go get -u github.com/aver-d/mpd-fzf
 
-Assuming ~/bin in $PATH:
+Using `go get` you may also need to set the [GOPATH][gopath] environment variable.
 
-    $ git clone https://github.com/aver-d/mpd-fzf
-    $ cd mpd-fzf
-    $ go build -o ~/bin/mpd-fzf mpd-fzf.go
-    $ cp mpd-fzf-play.bash ~/bin/mpd-fzf-play
-    $ chmod +x ~/bin/mpd-fzf-play
+Alternatively, assuming `~/bin` in `$PATH`, you could also do
 
+    go build -o ~/bin/mpd-fzf mpd-fzf.go
 
-
-`mpd-fzf-play` calls [mpc][mpc] to play the track, so mpc is a dependency. I could change this to make a direct TCP connection to mpd through Go, but there doesn't seem much need given the ubiquity of mpc. The extra script also provides an opportunity to run some additional tasks related to a specific mpd client.
+mpd-fzf calls [mpc][mpc] to play the track, so mpc is a dependency. I could change this to make a direct TCP connection to mpd through Go, but there doesn't seem much need given the ubiquity of mpc.
 
 To install mpc do something like…
 
@@ -35,13 +29,10 @@ or
 
     $ sudo pacman -S mpc
 
+
 ## Run
 
-This is all…
-
     $ mpd-fzf
-
-Should run very fast.
 
 ____
 
@@ -50,4 +41,5 @@ License: MIT
 [mpd]: https://www.musicpd.org
 [mpc]: https://www.musicpd.org/clients/mpc
 [fzf]: https://github.com/junegunn/fzf
+[gopath]: https://github.com/golang/go/wiki/GOPATH
 

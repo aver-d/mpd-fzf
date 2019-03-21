@@ -10,6 +10,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -222,8 +223,52 @@ func findDbFile() string {
 	return dbFile
 }
 
+func failNotify(message string) {
+	err := exec.Command("tmux", "display", message).Run()
+	if err != nil {
+		exec.Command("notify-send", message).Run()
+	}
+	fail(errors.New(message))
+}
+
+func mpcRun(args ...string) string {
+	out, err := exec.Command("mpc", args...).CombinedOutput()
+	if err != nil {
+		failNotify(string(out))
+	}
+	return string(out)
+}
+
+func mpcPlay(path string) {
+	pos, found := mpcFindOnPlaylist(path)
+	if !found {
+		mpcRun("add", path)
+	}
+	mpcRun("play", strconv.Itoa(pos))
+}
+
+func mpcFindOnPlaylist(path string) (int, bool) {
+	playlist := mpcRun("playlist", "-f", "%file%")
+	lines := strings.Split(playlist, "\n")
+	for i, line := range lines {
+		if line == path {
+			return i + 1, true
+		}
+	}
+	return len(lines), false
+}
+
+func cmdPlay(fzfline string) {
+	fields := strings.SplitN(fzfline, delimiter, 2)
+	if len(fields) != 2 {
+		failNotify("mpd-fzf: assert split failure")
+	}
+	path := fields[1]
+	mpcPlay(path)
+}
+
 func fzfcmd() *exec.Cmd {
-	bind := "--bind=enter:execute-silent(mpd-fzf-play {})"
+	bind := "--bind=enter:execute-silent(mpd-fzf _play {})"
 	fzf := exec.Command("fzf", "--no-hscroll", bind)
 	fzf.Stderr = os.Stderr
 	return fzf
@@ -237,6 +282,10 @@ func ignoreExitInterrupt(err error) error {
 }
 
 func main() {
+	if len(os.Args) > 2 && os.Args[1] == "_play" {
+		cmdPlay(os.Args[2])
+		return
+	}
 	dbFile := findDbFile()
 	format := trackFormatter()
 
