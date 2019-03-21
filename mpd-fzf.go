@@ -75,7 +75,7 @@ func (t *Track) Set(key, value string) {
 	case "Genre":
 		t.Genre = value
 	case "Time":
-		t.Time = formatDurationString(value)
+		t.Time = value
 	case "Title":
 		t.Title = value
 	}
@@ -84,14 +84,13 @@ func (t *Track) Set(key, value string) {
 func formatDurationString(str string) string {
 	duration, err := time.ParseDuration(str + "s")
 	if err != nil {
-		return ""
+		return "(-:--)"
 	}
-	zero := time.Time{}
-	format := zero.Add(duration).Format("04:05")
-	if duration > time.Hour {
-		format = fmt.Sprintf("%d:%s", int(duration.Hours()), format)
+	t := time.Time{}.Add(duration)
+	if duration < time.Hour {
+		return t.Format("(4:05)")
 	}
-	return "(" + format + ")"
+	return fmt.Sprintf("(%d:%s)", int(duration.Hours()), t.Format("04:05"))
 }
 
 func withoutExt(path string) string {
@@ -131,8 +130,9 @@ func trackFormatter() func(*Track) string {
 			info += " {" + t.Album + "}"
 		}
 		info = strings.Replace(info, delimiter, "", -1)
+		duration := formatDurationString(t.Time)
 		// Right align duration
-		info = alignLeftRight(width, info, t.Time)
+		info = alignLeftRight(width, info, duration)
 		return info + delimiter + t.Path
 	}
 }
