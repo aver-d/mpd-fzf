@@ -197,28 +197,29 @@ func findDbFile() string {
 		filepath.Join(home, ".mpdconf"),
 		"/etc/mpd.conf",
 	}
-	var f *os.File
+	var file *os.File
 	var confpath string
 	for _, path := range paths {
-		f, err = os.Open(path)
+		file, err = os.Open(path)
 		if err == nil {
 			confpath = path
 			break
 		}
 	}
-	failOn(f == nil, "No config file found")
+	failOn(file == nil, "No config file found")
 
 	expDb := regexp.MustCompile(`^\s*db_file\s*"([^"]+)"`)
-	scan := bufio.NewScanner(f)
+	scan := bufio.NewScanner(file)
 	var dbFile string
 	for scan.Scan() {
 		m := expDb.FindStringSubmatch(scan.Text())
 		if m != nil {
 			dbFile = expandUser(m[1], home)
+			break
 		}
 	}
 	fail(scan.Err())
-	fail(f.Close())
+	fail(file.Close())
 	failOn(dbFile == "", fmt.Sprintf("Could not find 'db_file' in configuration file '%s'", confpath))
 	return dbFile
 }
@@ -289,16 +290,16 @@ func main() {
 	dbFile := findDbFile()
 	format := trackFormatter()
 
-	f, err := os.Open(dbFile)
+	file, err := os.Open(dbFile)
 	fail(err)
-	gz, err := gzip.NewReader(f)
+	gz, err := gzip.NewReader(file)
 	fail(err)
 
 	scan := bufio.NewScanner(gz)
 	tracks := groupByArtist(parse(scan))
 
 	fail(gz.Close())
-	fail(f.Close())
+	fail(file.Close())
 
 	fzf := fzfcmd()
 	in, err := fzf.StdinPipe()
