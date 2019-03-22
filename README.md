@@ -6,7 +6,7 @@ mpd-fzf parses the mpd database and passes a list of tracks to the [fzf][fzf] co
 
 Tracks are formatted as "Artist - Track {Album} (MM:SS)", defaulting to the filename if there's insufficient information.
 
-mpd-fzf may be useful extension to an mpd client such as [ncmpc][ncmpc] or [ncmpcpp][ncmpcpp]. Tracks selected in fzf will pop up on the main client's playlist in another terminal.
+mpd-fzf may be a useful companion to an mpd client such as [ncmpc][ncmpc] or [ncmpcpp][ncmpcpp]. Tracks selected in fzf will pop up on the main client's playlist in another terminal.
 
 
 ## Usage
@@ -19,6 +19,12 @@ This will send the entire mpd database to fzf. The following keys can be used:
 * Alt-Enter: add track to playlist if it's not already listed
 
 All other fzf keybindings are as normal. These include Escape or Ctrl-Q to exit.
+
+I'm unlikely to add any further features since there are already many other mpd clients which work well. Note also that mpd-fzf is not intended to be used in scripts. If, for example, you'd like to use fzf to select and pass on tracks, you can use mpc (installation mentioned below).
+
+    $ mpc listall -f 'your_format_string' | fzf -m | your-script
+
+In fact, on that afternoon when I first wrote this program, if I'd noticed that mpc can do this, then I probably wouldn't have bothered writing the section of code which parses the mpd database (though the parsing is straightforward to do and provided some insight into how mpd works).
 
 
 ## Installation
