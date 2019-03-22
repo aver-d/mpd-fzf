@@ -250,12 +250,14 @@ func mpcRun(args ...string) string {
 	return string(out)
 }
 
-func mpcPlay(path string) {
+func mpcSelect(path string, play bool) {
 	pos, found := mpcFindOnPlaylist(path)
 	if !found {
 		mpcRun("add", path)
 	}
-	mpcRun("play", strconv.Itoa(pos))
+	if play {
+		mpcRun("play", strconv.Itoa(pos))
+	}
 }
 
 func mpcFindOnPlaylist(path string) (int, bool) {
@@ -269,38 +271,36 @@ func mpcFindOnPlaylist(path string) (int, bool) {
 	return len(lines), false
 }
 
-func cmdPlay(fzfline string) {
+func cmdSelect(fzfline string, play bool) {
 	fields := strings.SplitN(fzfline, delimiter, 3)
 	if len(fields) != 3 {
 		failNotify("mpd-fzf: split assertion failure")
 	}
 	path := fields[2]
-	mpcPlay(path)
+	mpcSelect(path, play)
 }
 
 func fzfcmd() *exec.Cmd {
-	bind := "--bind=enter:execute-silent(mpd-fzf _play {})"
+	bindPlay := "enter:execute-silent(mpd-fzf _play {})"
+	bindQueue := "alt-enter:execute-silent(mpd-fzf _queue {})"
 	fzf := exec.Command("fzf",
 		"--no-hscroll",
 		"--nth", "1",
 		"--delimiter", delimiter,
-		bind)
+		"--bind", bindPlay+","+bindQueue,
+	)
 	fzf.Stderr = os.Stderr
 	return fzf
 }
 
 func ignoreExitInterrupt(err error) error {
-	if strings.HasSuffix(err.Error(), "130") {
+	if err != nil && strings.HasSuffix(err.Error(), "130") {
 		return nil
 	}
 	return err
 }
 
-func main() {
-	if len(os.Args) > 2 && os.Args[1] == "_play" {
-		cmdPlay(os.Args[2])
-		return
-	}
+func cmdList() {
 	dbFile := findDbFile()
 	format := trackFormatter()
 
@@ -324,4 +324,22 @@ func main() {
 	}
 	fail(in.Close())
 	fail(ignoreExitInterrupt(fzf.Wait()))
+}
+
+func main() {
+	args := os.Args[1:]
+	if len(args) > 0 {
+		if len(args) == 2 {
+			cmd, path := args[0], args[1]
+			// undocumented subcommands
+			switch cmd {
+			case "_play":
+				cmdSelect(path, true)
+			case "_queue":
+				cmdSelect(path, false)
+			}
+		}
+		fail(errors.New("Usage: mpd-fzf (no arguments)"))
+	}
+	cmdList()
 }
